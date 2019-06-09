@@ -9,11 +9,22 @@ namespace BoolByte.Linq.Expressions.UnitTests.PredicateBuilder
         [Test]
         public void WhenNoConditionsAreSupplied_BuildsEmptyPredicate()
         {
-            var testSubject = new Expressions.PredicateBuilder();
-            var actual = testSubject.Build<TestClass>();
+            var actual = new Expressions.PredicateBuilder()
+                .Build<TestClass>();
             actual.Should().NotBeNull();
             var sample = new TestClass { IntValue = int.MaxValue };
             actual.Compile().Invoke(sample).Should().BeTrue();
+        }
+
+        [Test]
+        public void WhenSingleSimpleConditionsSIsSupplied_BuildsExpectedPredicate()
+        {
+            var actual = new Expressions.PredicateBuilder()
+                .WithFilter("IntValue", int.MaxValue)
+                .Build<TestClass>();
+            actual.Should().NotBeNull();
+            var sample = new TestClass { IntValue = 0 };
+            actual.Compile().Invoke(sample).Should().BeFalse();
         }
     }
 }
