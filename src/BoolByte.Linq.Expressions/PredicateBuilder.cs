@@ -7,7 +7,9 @@ namespace BoolByte.Linq.Expressions
     {
         public Expression<Func<T, bool>> Build<T>()
         {
-            throw new NotImplementedException();
+            var parameterExpression = Expression.Parameter(typeof(T), "i");
+            var valueExpression = Expression.Constant(true);
+            return Expression.Lambda<Func<T, bool>>(valueExpression, parameterExpression);
         }
     }
 }
