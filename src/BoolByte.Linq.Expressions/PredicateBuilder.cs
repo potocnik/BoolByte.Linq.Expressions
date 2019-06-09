@@ -1,4 +1,5 @@
-﻿using BoolByte.Linq.Expressions.Models;
+﻿using BoolByte.Linq.Expressions.Extensions;
+using BoolByte.Linq.Expressions.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,31 +17,6 @@ namespace BoolByte.Linq.Expressions
             _filters = new List<Filter>();
         }
 
-        private Expression ToConstant(MemberExpression memberExpression, object value)
-        {
-            if (value.GetType().Equals(memberExpression.Type))
-                return Expression.Constant(value);
-            var concreteValue = TypeDescriptor.GetConverter(memberExpression.Type).ConvertFromInvariantString(value.ToString());
-            var valueExpression = Expression.Constant(concreteValue);
-            return Expression.Convert(valueExpression, memberExpression.Type);
-        }
-
-        private Expression ToCompare(MemberExpression memberExpression, CompareTypes compareType, object value)
-        {
-            switch (compareType)
-            {
-                case CompareTypes.Equals:
-                    return Expression.Equal(memberExpression, ToConstant(memberExpression, value));
-            }
-            throw new NotImplementedException($"Requested compare type {compareType} has not been implemented yet");
-        }
-
-        private Expression ToCompare(ParameterExpression parameterExpression, Filter filter)
-        {
-            var memberExpression = Expression.PropertyOrField(parameterExpression, filter.PropertyName);
-            return ToCompare(memberExpression, filter.CompareType, filter.Value);
-        }
-
         public Expression<Func<T, bool>> Build<T>()
         {
             var parameterExpression = Expression.Parameter(typeof(T), "i");
@@ -50,7 +26,7 @@ namespace BoolByte.Linq.Expressions
                 return Expression.Lambda<Func<T, bool>>(valueExpression, parameterExpression);
             }
             var andConditions = _filters
-                .Select(f => ToCompare(parameterExpression, f));
+                .Select(parameterExpression.ToCompare);
             var expression = andConditions.First();
             andConditions
                 .Skip(1)
